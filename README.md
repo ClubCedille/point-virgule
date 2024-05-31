@@ -1,4 +1,4 @@
-# Point: Enregistrement Précis et Gestion des Canaux Vocaux Discord
+# Point
 
 Point est un bot Discord conçu pour rejoindre des canaux vocaux, enregistrer de l'audio et l'envoyer a un service de transcription automatique. Il est conçu pour être facile à utiliser et à déployer, et peut être utilisé pour enregistrer des réunions, des appels, des podcasts et plus encore.
 
