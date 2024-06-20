@@ -1,6 +1,6 @@
-# Point
+# point-virgule
 
-Point est un bot Discord conçu pour rejoindre des canaux vocaux, enregistrer de
+point-virgule est un bot Discord conçu pour rejoindre des canaux vocaux, enregistrer de
 l'audio et l'envoyer a un service de transcription automatique.
 
 ## Prérequis
@@ -11,8 +11,8 @@ l'audio et l'envoyer a un service de transcription automatique.
 ## Utilisation
 
 ```sh
-git clone https://github.com/yourusername/point.git
-cd point
+git clone https://github.com/yourusername/point-virgule.git
+cd point-virgule
 pip install -r requirements.txt
 python main.py
 ```
@@ -22,8 +22,8 @@ python main.py
 Construire et exécuter l'image Docker:
 
 ```sh
-docker build -t point .
-docker run -d --name point point
+docker build -t point-virgule .
+docker run -d --name point-virgule point-virgule
 ```
 
 ## Commandes
