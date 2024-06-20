@@ -40,8 +40,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/point:commit-${{ github.sha }}
-            ${{ env.REGISTRY }}/point:latest
+            ${{ env.REGISTRY }}/point-virgule:commit-${{ github.sha }}
+            ${{ env.REGISTRY }}/point-virgule:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
