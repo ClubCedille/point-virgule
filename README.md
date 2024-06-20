@@ -4,7 +4,30 @@ point-virgule est un bot Discord conçu pour rejoindre des canaux vocaux, enregi
 l'audio et l'envoyer a un service de transcription automatique.
 
 Séquence de fonctionnement:
-![point-virgule](./img/sequence-diagram.png)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Discord
+    participant Point-Virgule
+    participant Point
+    participant Virgule
+
+    User->>Discord: User starts voice channel
+    User->>Discord: /start_meeting channel_id
+    Discord->>Point-Virgule: Joins voice channel
+    Point-Virgule->>Discord: Recording started
+    Discord->>User: acknowledgment of recording started
+    User->>Discord: /stop_meeting
+    Discord->>Point-Virgule: Recording stopped
+    Point-Virgule->>Discord: Leave voice channel
+    Point-Virgule->>Point: Send audio data
+    Point->>Point-Virgule: Send back transcription
+    Point-Virgule->>Virgule: Send transcription
+    Virgule->>Point-Virgule: Sends back summary
+    Point-Virgule->>Discord: Send summary
+    Discord->>User: Send summary
+```
 
 ## Prérequis
 
