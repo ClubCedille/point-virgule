@@ -3,6 +3,9 @@
 point-virgule est un bot Discord conçu pour rejoindre des canaux vocaux, enregistrer de
 l'audio et l'envoyer a un service de transcription automatique.
 
+Séquence de fonctionnement:
+![point-virgule](./img/sequence-diagram.png)
+
 ## Prérequis
 
 - Python
