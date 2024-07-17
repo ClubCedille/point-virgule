@@ -1,0 +1,30 @@
+services:
+  point-virgule:
+    build: .
+    container_name: point-virgule
+    env_file:
+      - .env
+    networks:
+      - point-virgule
+
+  point:
+    build: ../point
+    container_name: point
+    ports:
+      - "5000:5000"
+    networks:
+      - point-virgule
+
+  # virgule:
+  #   build: ../virgule
+  #   container_name: virgule
+  #   ports:
+  #     - "5001:5001"
+  #   networks:
+  #     - point-virgule
+  #   volumes:
+  #     - .:/app
+
+networks:
+  point-virgule:
+    driver: bridge
