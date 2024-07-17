@@ -8,7 +8,7 @@ services:
       - point-virgule
 
   point:
-    build: ../point
+    image: ghcr.io/clubcedille/point:latest
     container_name: point
     ports:
       - "5000:5000"
