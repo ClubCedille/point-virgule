@@ -6,14 +6,15 @@ from dotenv import load_dotenv
 from interactions import slash_command, GuildVoice, OptionType, SlashContext, ChannelType, slash_option, Client
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Point-Virgule")
 
 class RecorderBot(Client):
-    def __init__(self, recording_path: str, api_url: str, *args, **kwargs):
+    def __init__(self, recording_path: str, point_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.recording_path = recording_path
-        self.point_url = api_url
+        self.point_url = point_url
         self.active_recordings = {}
+        self.recording_states = {}
 
     @slash_command(name="start_meeting", description="Commencer l'enregistrement d'une réunion")
     @slash_option(
@@ -26,40 +27,40 @@ class RecorderBot(Client):
     async def start_meeting(self, ctx: SlashContext, channel: GuildVoice):
         await ctx.send("Connexion au canal vocal...")
         voice_state = await channel.connect()
-        await ctx.send("Enregistrement démarré.")
+        await voice_state.start_recording()
         self.active_recordings[ctx.guild_id] = voice_state
-        await ctx.send("Utilisez `/stop_meeting` pour arrêter l'enregistrement et déconnecter.")
+        self.recording_states[ctx.guild_id] = True
+        await ctx.send("Enregistrement démarré. Utilisez `/stop_meeting` pour arrêter l'enregistrement et déconnecter.")
         logger.info(f"Enregistrement démarré dans la guilde: {ctx.guild_id}")
-
 
     @slash_command(name="stop_meeting", description="Arrêter l'enregistrement d'une réunion")
     async def stop_meeting(self, ctx: SlashContext):
-        if ctx.guild_id in self.active_recordings:
-            channel = self.active_recordings[ctx.guild_id]
+        if ctx.guild_id in self.active_recordings and self.recording_states.get(ctx.guild_id, False):
+            voice_state = self.active_recordings[ctx.guild_id]
             await ctx.send("Déconnexion du canal vocal...")
-            await ctx.voice_state.stop_recording()
-            await channel.disconnect()
-            file_path = self.save_audio(ctx)
+            await voice_state.stop_recording()
+            await voice_state.disconnect()
+            file_path = self.save_audio(ctx, voice_state)
             del self.active_recordings[ctx.guild_id]
+            self.recording_states[ctx.guild_id] = False
             await ctx.send("Enregistrement arrêté. Envoi du fichier audio pour transcription...")
 
             logger.info(f"Enregistrement arrêté dans la guilde: {ctx.guild_id}")
-            
+
             transcript = self.get_transcript(file_path)
             if transcript:
                 await ctx.send(f"Transcription:\n{transcript}")
                 logger.info(f"Transcription réussie: {transcript[:100]}")
+                self.delete_audio(file_path)
             else:
                 await ctx.send("Erreur lors de la transcription de l'audio.")
                 logger.error(f"Erreur lors de la transcription de l'audio pour la guilde {ctx.guild_id}")
-            
-            self.delete_audio(file_path)
         else:
             await ctx.send("Je n'enregistre pas dans ce serveur Discord.")
             logger.error(f"Enregistrement non trouvé pour la guilde {ctx.guild_id}")
 
-    def save_audio(self, ctx: SlashContext):
-        for user_id, audio_data in ctx.voice_state.recorder.output.items():
+    def save_audio(self, ctx: SlashContext, voice_state):
+        for user_id, audio_data in voice_state.recorder.output.items():
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             file_name = f"{user_id}_{timestamp}.mp3"
             file_path = os.path.join(self.recording_path, file_name)
@@ -71,7 +72,7 @@ class RecorderBot(Client):
     def get_transcript(self, file_path):
         try:
             with open(file_path, 'rb') as audio_file:
-                response = requests.post(self.api_url, files={'file': audio_file}, headers={'Content-Type': 'audio/mp3'})
+                response = requests.post(self.point_url, files={'file': audio_file}, headers={'Content-Type': 'audio/mp3'})
                 if response.status_code == 200:
                     logger.info(f"L'appel de l'API de transcription a réussi pour le fichier {file_path}")
                     return response.text
@@ -89,7 +90,7 @@ if __name__ == "__main__":
     load_dotenv()
     token = os.getenv("DISCORD_TOKEN")
     recording_path = os.getenv("RECORDING_PATH", "./recordings/")
-    api_url = os.getenv("TRANSCRIPTION_API_URL", "http://127.0.0.1:5000/transcript")
-    bot = RecorderBot(recording_path, api_url)
-    logger.info(f"{bot.user.name} démarré.")
+    point_url = os.getenv("TRANSCRIPTION_API_URL", "http://localhost:5000/transcript")
+    bot = RecorderBot(recording_path, point_url)
+    logger.info("démarrage du bot Discord...")
     bot.start(token)

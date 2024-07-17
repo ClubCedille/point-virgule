@@ -4,6 +4,10 @@ services:
     container_name: point-virgule
     env_file:
       - .env
+    ports:
+      - "80:80"
+    volumes:
+      - ./recordings:/app/recordings
     networks:
       - point-virgule
 

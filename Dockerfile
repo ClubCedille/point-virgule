@@ -4,8 +4,10 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    pip install --no-cache-dir -r requirements.txt
 
-ENV RECORDING_PATH=./recordings
+EXPOSE 80
 
-CMD ["python", "main.py"]
+CMD ["python", "point-virgule.py"]
