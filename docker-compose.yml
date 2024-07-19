@@ -16,6 +16,8 @@ services:
     container_name: point
     ports:
       - "5000:5000"
+    environment:
+      - WHISPER_MODEL_SIZE=large
     networks:
       - point-virgule
 
