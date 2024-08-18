@@ -21,15 +21,15 @@ services:
     networks:
       - point-virgule
 
-  # virgule:
-  #   build: ../virgule
-  #   container_name: virgule
-  #   ports:
-  #     - "5001:5001"
-  #   networks:
-  #     - point-virgule
-  #   volumes:
-  #     - .:/app
+  virgule:
+    build: ../virgule
+    container_name: virgule
+    ports:
+      - "5001:5001"
+    networks:
+      - point-virgule
+    volumes:
+      - ../virgule:/app
 
 networks:
   point-virgule:

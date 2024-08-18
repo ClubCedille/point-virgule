@@ -9,10 +9,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Point-Virgule")
 
 class RecorderBot(Client):
-    def __init__(self, recording_path: str, point_url: str, *args, **kwargs):
+    def __init__(self, recording_path: str, point_url: str, summary_url: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.recording_path = recording_path
         self.point_url = point_url
+        self.summary_url = summary_url
         self.active_recordings = {}
         self.recording_states = {}
 
@@ -51,6 +52,12 @@ class RecorderBot(Client):
             if transcript:
                 await ctx.send(f"Transcription:\n{transcript}")
                 logger.info(f"Transcription réussie: {transcript[:100]}")
+                
+                summary = self.get_summary(transcript)
+                if summary:
+                    await ctx.send(f"Résumé:\n{summary}")
+                    logger.info(f"Résumé réussi: {summary[:100]}")
+                
                 self.delete_audio(file_path)
             else:
                 await ctx.send("Erreur lors de la transcription de l'audio.")
@@ -82,6 +89,22 @@ class RecorderBot(Client):
             logger.error(f"Une erreur s'est produite lors de l'appel de l'API de transcription pour le fichier {file_path}: {e}")
             return None
 
+    def get_summary(self, transcript):
+        try:
+            response = requests.post(
+                self.summary_url,
+                json={"transcript": transcript},
+                headers={'Content-Type': 'application/json'}
+            )
+            if response.status_code == 200:
+                logger.info(f"L'appel de l'API de résumé a réussi.")
+                return response.json().get('summary')
+            logger.error(f"L'appel de l'API de résumé a échoué avec le code d'état {response.status_code}")
+            return None
+        except Exception as e:
+            logger.error(f"Une erreur s'est produite lors de l'appel de l'API de résumé: {e}")
+            return None
+
     def delete_audio(self, file_path):
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -91,6 +114,7 @@ if __name__ == "__main__":
     token = os.getenv("DISCORD_TOKEN")
     recording_path = os.getenv("RECORDING_PATH", "./recordings/")
     point_url = os.getenv("TRANSCRIPTION_API_URL", "http://localhost:5000/transcript")
-    bot = RecorderBot(recording_path, point_url)
-    logger.info("démarrage du bot Discord...")
+    summary_url = os.getenv("SUMMARY_API_URL", "http://localhost:5001/summarize")
+    bot = RecorderBot(recording_path, point_url, summary_url)
+    logger.info("Démarrage du bot Discord...")
     bot.start(token)
