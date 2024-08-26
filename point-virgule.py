@@ -10,11 +10,14 @@ logger = logging.getLogger("Point-Virgule")
 
 class RecorderBot(Client):
     def __init__(self, recording_path: str, point_url: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(heartbeat_interval=45, *args, **kwargs)  # Adjust interval as needed
         self.recording_path = recording_path
         self.point_url = point_url
         self.active_recordings = {}
         self.recording_states = {}
+
+    async def on_ready(self):
+        print(f'Logged in as {self.user}')
 
     @slash_command(name="start_meeting", description="Commencer l'enregistrement d'une réunion")
     @slash_option(
@@ -25,16 +28,22 @@ class RecorderBot(Client):
         channel_types=[ChannelType.GUILD_VOICE]
     )
     async def start_meeting(self, ctx: SlashContext, channel: GuildVoice):
-        await ctx.send("Connexion au canal vocal...")
-        voice_state = await channel.connect()
-        await voice_state.start_recording()
-        self.active_recordings[ctx.guild_id] = voice_state
-        self.recording_states[ctx.guild_id] = True
-        await ctx.send("Enregistrement démarré. Utilisez `/stop_meeting` pour arrêter l'enregistrement et déconnecter.")
-        logger.info(f"Enregistrement démarré dans la guilde: {ctx.guild_id}")
+        await ctx.defer()
+        try:
+            await ctx.send("Connexion au canal vocal...")
+            voice_state = await channel.connect()
+            await voice_state.start_recording()
+            self.active_recordings[ctx.guild_id] = voice_state
+            self.recording_states[ctx.guild_id] = True
+            await ctx.send("Enregistrement démarré. Utilisez `/stop_meeting` pour arrêter l'enregistrement et déconnecter.")
+            logger.info(f"Enregistrement démarré dans la guilde: {ctx.guild_id}")
+        except Exception as e:
+            await ctx.send(f"Erreur lors de la connexion au canal vocal : {str(e)}")
+            logger.error(f"Erreur lors de la connexion au canal vocal dans la guilde {ctx.guild_id}: {e}")
 
     @slash_command(name="stop_meeting", description="Arrêter l'enregistrement d'une réunion")
     async def stop_meeting(self, ctx: SlashContext):
+        await ctx.defer()
         if ctx.guild_id in self.active_recordings and self.recording_states.get(ctx.guild_id, False):
             voice_state = self.active_recordings[ctx.guild_id]
             await ctx.send("Déconnexion du canal vocal...")
